@@ -73,6 +73,9 @@ const uint32_t RULE_PRIORITY_UID_DEFAULT_NETWORK     = 27000;
 // the network, it will not work. That will potentially cause a user-visible error.
 const uint32_t RULE_PRIORITY_UID_DEFAULT_UNREACHABLE = 28000;
 const uint32_t RULE_PRIORITY_DEFAULT_NETWORK         = 29000;
+#ifdef NEEDS_NETD_DIRECT_CONNECT_RULE
+const uint32_t RULE_PRIORITY_DIRECTLY_CONNECTED      = 30000;
+#endif
 const uint32_t RULE_PRIORITY_UNREACHABLE             = 32000;
 // clang-format on
 
