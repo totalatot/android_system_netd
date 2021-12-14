@@ -533,6 +533,17 @@ Status TrafficController::updateOwnerMapEntry(UidOwnerMatchType match, uid_t uid
     return netdutils::status::ok;
 }
 
+UidOwnerMatchType TrafficController::jumpOpToMatch(BandwidthController::IptJumpOp jumpHandling) {
+    switch (jumpHandling) {
+        case BandwidthController::IptJumpReject:
+            return PENALTY_BOX_MATCH;
+        case BandwidthController::IptJumpReturn:
+            return HAPPY_BOX_MATCH;
+        case BandwidthController::IptJumpNoAdd:
+            return NO_MATCH;
+    }
+}
+
 Status TrafficController::removeRule(uint32_t uid, UidOwnerMatchType match) {
     auto oldMatch = mUidOwnerMap.readValue(uid);
     if (oldMatch.ok()) {
@@ -576,17 +587,22 @@ Status TrafficController::addRule(uint32_t uid, UidOwnerMatchType match, uint32_
 }
 
 Status TrafficController::updateUidOwnerMap(const std::vector<uint32_t>& appUids,
-                                            UidOwnerMatchType matchType,
+                                            BandwidthController::IptJumpOp jumpHandling,
                                             BandwidthController::IptOp op) {
     std::lock_guard guard(mMutex);
+    UidOwnerMatchType match = jumpOpToMatch(jumpHandling);
+    if (match == NO_MATCH) {
+        return statusFromErrno(
+                EINVAL, StringPrintf("invalid IptJumpOp: %d, command: %d", jumpHandling, match));
+    }
     for (uint32_t uid : appUids) {
         if (op == BandwidthController::IptOpDelete) {
-            RETURN_IF_NOT_OK(removeRule(uid, matchType));
+            RETURN_IF_NOT_OK(removeRule(uid, match));
         } else if (op == BandwidthController::IptOpInsert) {
-            RETURN_IF_NOT_OK(addRule(uid, matchType));
+            RETURN_IF_NOT_OK(addRule(uid, match));
         } else {
             // Cannot happen.
-            return statusFromErrno(EINVAL, StringPrintf("invalid IptOp: %d, %d", op, matchType));
+            return statusFromErrno(EINVAL, StringPrintf("invalid IptOp: %d, %d", op, match));
         }
     }
     return netdutils::status::ok;

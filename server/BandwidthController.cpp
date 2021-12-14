@@ -323,24 +323,24 @@ int BandwidthController::enableDataSaver(bool enable) {
 }
 
 int BandwidthController::addNaughtyApps(const std::vector<uint32_t>& appUids) {
-    return manipulateSpecialApps(appUids, PENALTY_BOX_MATCH, IptOpInsert);
+    return manipulateSpecialApps(appUids, IptJumpReject, IptOpInsert);
 }
 
 int BandwidthController::removeNaughtyApps(const std::vector<uint32_t>& appUids) {
-    return manipulateSpecialApps(appUids, PENALTY_BOX_MATCH, IptOpDelete);
+    return manipulateSpecialApps(appUids, IptJumpReject, IptOpDelete);
 }
 
 int BandwidthController::addNiceApps(const std::vector<uint32_t>& appUids) {
-    return manipulateSpecialApps(appUids, HAPPY_BOX_MATCH, IptOpInsert);
+    return manipulateSpecialApps(appUids, IptJumpReturn, IptOpInsert);
 }
 
 int BandwidthController::removeNiceApps(const std::vector<uint32_t>& appUids) {
-    return manipulateSpecialApps(appUids, HAPPY_BOX_MATCH, IptOpDelete);
+    return manipulateSpecialApps(appUids, IptJumpReturn, IptOpDelete);
 }
 
 int BandwidthController::manipulateSpecialApps(const std::vector<uint32_t>& appUids,
-                                               UidOwnerMatchType matchType, IptOp op) {
-    Status status = gCtls->trafficCtrl.updateUidOwnerMap(appUids, matchType, op);
+                                               IptJumpOp jumpHandling, IptOp op) {
+    Status status = gCtls->trafficCtrl.updateUidOwnerMap(appUids, jumpHandling, op);
     if (!isOk(status)) {
         ALOGE("unable to update the Bandwidth Uid Map: %s", toString(status).c_str());
     }

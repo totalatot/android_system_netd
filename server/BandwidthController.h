@@ -24,7 +24,6 @@
 #include <mutex>
 
 #include "NetdConstants.h"
-#include "netdbpf/bpf_shared.h"
 
 class BandwidthController {
 public:
@@ -90,7 +89,7 @@ public:
 
     std::string makeDataSaverCommand(IptablesTarget target, bool enable);
 
-    int manipulateSpecialApps(const std::vector<uint32_t>& appStrUids, UidOwnerMatchType matchType,
+    int manipulateSpecialApps(const std::vector<uint32_t>& appStrUids, IptJumpOp jumpHandling,
                               IptOp appOp);
 
     int runIptablesAlertCmd(IptOp op, const std::string& alertName, int64_t bytes);
