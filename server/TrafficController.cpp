@@ -586,7 +586,7 @@ Status TrafficController::addRule(uint32_t uid, UidOwnerMatchType match, uint32_
     return netdutils::status::ok;
 }
 
-Status TrafficController::updateUidOwnerMap(const std::vector<uint32_t>& appUids,
+Status TrafficController::updateUidOwnerMap(const std::vector<std::string>& appStrUids,
                                             BandwidthController::IptJumpOp jumpHandling,
                                             BandwidthController::IptOp op) {
     std::lock_guard guard(mMutex);
@@ -595,7 +595,14 @@ Status TrafficController::updateUidOwnerMap(const std::vector<uint32_t>& appUids
         return statusFromErrno(
                 EINVAL, StringPrintf("invalid IptJumpOp: %d, command: %d", jumpHandling, match));
     }
-    for (uint32_t uid : appUids) {
+    for (const auto& appStrUid : appStrUids) {
+        char* endPtr;
+        long uid = strtol(appStrUid.c_str(), &endPtr, 10);
+        if ((errno == ERANGE && (uid == LONG_MAX || uid == LONG_MIN)) ||
+            (endPtr == appStrUid.c_str()) || (*endPtr != '\0')) {
+               return statusFromErrno(errno, "invalid uid string:" + appStrUid);
+        }
+
         if (op == BandwidthController::IptOpDelete) {
             RETURN_IF_NOT_OK(removeRule(uid, match));
         } else if (op == BandwidthController::IptOpInsert) {
